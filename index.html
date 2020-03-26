@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск по строкам</title>
+    <style>
+        *[v-cloak] {
+            display: none;
+        }
+        table {
+            table-layout: fixed;
+            width: 500px;
+            text-align: left;
+        }
+        table thead th {
+            background-color: lightcyan;
+        }
+    </style>
+</head>
+<body>
+    <div 
+        id="app"
+        v-cloak>
+        <form
+            v-if="stringsArray.length > 0"
+            @submit.prevent="serachFromTrash">
+            <input 
+                type="text"
+                v-model="searchString">
+            <button
+                type="submit">Искать</button>
+        </form>
+        <button
+            v-else
+            @click.prevent="generateTrash">Сгенерировать мусор</button>
+        <hr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ключ</th>
+                    <th>Значение</th>
+                </tr>
+            </thead>
+            <tbody> 
+                <tr>
+                    <td>В массиве:</td>
+                    <td>{{ stringsArray.length }}</td>
+                    <td>
+                        <a 
+                            href="#"
+                            @click.prevent="clearLocalStorage">
+                            Очистить</a>
+                        </td>
+                </tr>
+                <tr
+                    v-if="foundedStrings">
+                    <td>Строк найдено:</td>
+                    <td>{{ foundedStrings.length }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        var app = new Vue({
+        el: '#app',
+            data: {
+                searchString: '',
+                stringsArray: [],
+                foundedStrings: []
+            },
+            mounted() {
+                this.stringsArray = JSON.parse(localStorage.getItem('strings')) ? JSON.parse(localStorage.getItem('strings')) : []
+            },
+            methods: {
+                generateTrash() {
+                    const charLowercase = 'abcdefghijklmnopqrstuvwxyz';
+                    const charUppercase = charLowercase.toUpperCase();
+                    let charSource = charLowercase + charUppercase;
+                    
+                    let tmpArray = []
+                    for(let o = 0; o < 100; o++) {
+                        tmpArray[o] = []
+                        for(let i = 0; i < 100000; i++) {
+                            let string = '';
+                            for(let j = 0; j < 100; j++) {
+                                let index = Math.floor(Math.random() * Math.floor(charSource.length))
+                                string += charSource[index];
+                            }
+                            tmpArray[o].push(string)
+                        }
+                        
+                        this.stringsArray.push.apply(this.stringsArray, tmpArray[o]);
+                    }
+
+                    this.stringsArray.sort(function(a, b){
+                        let x = a.toUpperCase();
+                        let y = b.toUpperCase()
+
+                        return x == y ? 0 : x > y ? 1 : -1;
+                    })
+
+                    localStorage.setItem('strings', JSON.stringify(this.stringsArray))
+                },
+                serachFromTrash() {
+                    regex = new RegExp(`^${this.searchString}`, 'i');
+                    this.foundedStrings = this.stringsArray.filter(item => item.match(regex));
+                },
+                clearLocalStorage() {
+                    localStorage.clear();
+                    this.stringsArray = JSON.parse(localStorage.getItem('strings')) ? JSON.parse(localStorage.getItem('strings')) : [];
+                }
+            }
+        })
+    </script>
+</body>
+</html>
