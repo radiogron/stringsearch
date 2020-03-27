@@ -24,16 +24,23 @@
         v-cloak>
         <form
             v-if="stringsArray.length > 0"
-            @submit.prevent="serachFromTrash">
+            @submit.prevent="searchFromTrash">
             <input 
-                type="text"
+                type="search"
                 v-model="searchString">
             <button
                 type="submit">Искать</button>
         </form>
-        <button
+        <form
             v-else
-            @click.prevent="generateTrash">Сгенерировать мусор</button>
+            @submit.prevent="generateTrash">
+            <input
+                v-model="trashSize"
+                type="number">
+            <button
+                type="submit">Сгенерировать мусор на {{ trashSize }} единиц</button>
+        </form>
+        
         <hr>
         <table>
             <thead>
@@ -46,7 +53,8 @@
                 <tr>
                     <td>В массиве:</td>
                     <td>{{ stringsArray.length }}</td>
-                    <td>
+                    <td
+                        v-if="stringsArray.length != 0">
                         <a 
                             href="#"
                             @click.prevent="clearLocalStorage">
@@ -68,9 +76,11 @@
             data: {
                 searchString: '',
                 stringsArray: [],
-                foundedStrings: []
+                foundedStrings: [],
+                trashSize: 1000,
+                trashStringSize: 100
             },
-            mounted() {
+            created() {
                 this.stringsArray = JSON.parse(localStorage.getItem('strings')) ? JSON.parse(localStorage.getItem('strings')) : []
             },
             methods: {
@@ -78,21 +88,15 @@
                     const charLowercase = 'abcdefghijklmnopqrstuvwxyz';
                     const charUppercase = charLowercase.toUpperCase();
                     let charSource = charLowercase + charUppercase;
-                    
-                    let tmpArray = []
-                    for(let o = 0; o < 100; o++) {
-                        tmpArray[o] = []
-                        for(let i = 0; i < 100000; i++) {
-                            let string = '';
-                            for(let j = 0; j < 100; j++) {
-                                let index = Math.floor(Math.random() * Math.floor(charSource.length))
-                                string += charSource[index];
-                            }
-                            tmpArray[o].push(string)
+                    for(let i = 0; i < this.trashSize; i++) {
+                        let string = '';
+                        for(let j = 0; j < this.trashStringSize; j++) {
+                            let index = Math.floor(Math.random() * Math.floor(charSource.length))
+                            string += charSource[index];
                         }
-                        
-                        this.stringsArray.push.apply(this.stringsArray, tmpArray[o]);
+                        this.stringsArray.push(string);
                     }
+                        
 
                     this.stringsArray.sort(function(a, b){
                         let x = a.toUpperCase();
@@ -101,9 +105,9 @@
                         return x == y ? 0 : x > y ? 1 : -1;
                     })
 
-                    localStorage.setItem('strings', JSON.stringify(this.stringsArray))
+                    localStorage.setItem('strings', JSON.stringify(this.stringsArray));
                 },
-                serachFromTrash() {
+                searchFromTrash() {
                     regex = new RegExp(`^${this.searchString}`, 'i');
                     this.foundedStrings = this.stringsArray.filter(item => item.match(regex));
                 },
